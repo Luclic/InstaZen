@@ -23,19 +23,14 @@ jobs:
           mkdir revanced
           cd revanced
           
-          # Fetch latest CLI (still a .jar)
-          curl -s https://api.github.com/repos/revanced/revanced-cli/releases/latest | grep "browser_download_url.*jar" | cut -d : -f 2,3 | tr -d \" | wget -qi -
+          # Fetch and name latest CLI
+          curl -s https://api.github.com/repos/revanced/revanced-cli/releases/latest | grep "browser_download_url.*jar" | cut -d : -f 2,3 | tr -d \" | wget -qi - -O revanced-cli.jar
           
-          # Fetch latest Patches (now an .rvp file instead of .jar)
-          curl -s https://api.github.com/repos/revanced/revanced-patches/releases/latest | grep "browser_download_url.*rvp" | cut -d : -f 2,3 | tr -d \" | wget -qi -
+          # Fetch and name latest Patches
+          curl -s https://api.github.com/repos/revanced/revanced-patches/releases/latest | grep "browser_download_url.*rvp" | cut -d : -f 2,3 | tr -d \" | wget -qi - -O revanced-patches.rvp
           
-          # Fetch latest Integrations (.apk)
-          curl -s https://api.github.com/repos/revanced/revanced-integrations/releases/latest | grep "browser_download_url.*apk" | cut -d : -f 2,3 | tr -d \" | wget -qi -
-          
-          # Rename files to standard names
-          mv revanced-cli*.jar revanced-cli.jar
-          mv patches-*.rvp revanced-patches.rvp
-          mv revanced-integrations*.apk revanced-integrations.apk
+          # Fetch and name latest Integrations
+          curl -s https://api.github.com/repos/revanced/revanced-integrations/releases/latest | grep "browser_download_url.*apk" | cut -d : -f 2,3 | tr -d \" | wget -qi - -O revanced-integrations.apk
 
       - name: Download apkeep (APK Fetcher)
         run: |
