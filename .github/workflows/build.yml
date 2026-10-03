@@ -22,18 +22,43 @@ jobs:
         run: |
           mkdir revanced
           cd revanced
-          # Fetch latest CLI, Patches, and Integrations via GitHub API
+          
+          # Fetch latest CLI (still a .jar)
           curl -s https://api.github.com/repos/revanced/revanced-cli/releases/latest | grep "browser_download_url.*jar" | cut -d : -f 2,3 | tr -d \" | wget -qi -
-          curl -s https://api.github.com/repos/revanced/revanced-patches/releases/latest | grep "browser_download_url.*jar" | cut -d : -f 2,3 | tr -d \" | wget -qi -
+          
+          # Fetch latest Patches (now an .rvp file instead of .jar)
+          curl -s https://api.github.com/repos/revanced/revanced-patches/releases/latest | grep "browser_download_url.*rvp" | cut -d : -f 2,3 | tr -d \" | wget -qi -
+          
+          # Fetch latest Integrations (.apk)
           curl -s https://api.github.com/repos/revanced/revanced-integrations/releases/latest | grep "browser_download_url.*apk" | cut -d : -f 2,3 | tr -d \" | wget -qi -
+          
+          # Rename files to standard names
           mv revanced-cli*.jar revanced-cli.jar
-          mv revanced-patches*.jar revanced-patches.jar
+          mv patches-*.rvp revanced-patches.rvp
           mv revanced-integrations*.apk revanced-integrations.apk
 
       - name: Download apkeep (APK Fetcher)
         run: |
           wget https://github.com/EFForg/apkeep/releases/latest/download/apkeep-x86_64-unknown-linux-gnu -O apkeep
           chmod +x apkeep
+
+      - name: Download Latest Instagram APK
+        run: |
+          ./apkeep -a com.instagram.android .
+          mv com.instagram.android.apk instagram.apk
+
+      - name: Patch APK with ReVanced
+        run: |
+          java -jar revanced/revanced-cli.jar patch \
+            -p revanced/revanced-patches.rvp \
+            -m revanced/revanced-integrations.apk \
+            -i hide-ads \
+            -i hide-explore \
+            -i hide-reels \
+            -i disable-reels-scrolling \
+            -i custom-branding \
+            -o instazen-unsigned.apk \
+            instagram.apk
 
       - name: Download Latest Instagram APK
         run: |
