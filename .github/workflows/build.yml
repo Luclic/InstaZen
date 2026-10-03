@@ -60,30 +60,12 @@ jobs:
             -o instazen-unsigned.apk \
             instagram.apk
 
-      - name: Download Latest Instagram APK
-        run: |
-          ./apkeep -a com.instagram.android .
-          mv com.instagram.android.apk instagram.apk
-
-      - name: Patch APK with ReVanced
-        run: |
-          java -jar revanced/revanced-cli.jar patch \
-            -p revanced/revanced-patches.jar \
-            -m revanced/revanced-integrations.apk \
-            -i hide-ads \
-            -i hide-explore \
-            -i hide-reels \
-            -i disable-reels-scrolling \
-            -i custom-branding \
-            -o instazen-unsigned.apk \
-            instagram.apk
-
       - name: Decode Keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > instazen.keystore
 
       - name: Sign APK
         run: |
-          apksigner sign --ks instazen.keystore \
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks instazen.keystore \
             --ks-key-alias ${{ secrets.KEYALIAS }} \
             --ks-pass pass:${{ secrets.KEYPASSWORD }} \
             --out InstaZen-Release.apk \
