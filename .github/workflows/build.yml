@@ -18,9 +18,6 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Download ReVanced Tooling
         run: |
           mkdir revanced
