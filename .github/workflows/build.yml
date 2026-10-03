@@ -1,0 +1,77 @@
+name: Build InstaZen
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Runs every Sunday at midnight
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Download ReVanced Tooling
+        run: |
+          mkdir revanced
+          cd revanced
+          # Fetch latest CLI, Patches, and Integrations via GitHub API
+          curl -s https://api.github.com/repos/revanced/revanced-cli/releases/latest | grep "browser_download_url.*jar" | cut -d : -f 2,3 | tr -d \" | wget -qi -
+          curl -s https://api.github.com/repos/revanced/revanced-patches/releases/latest | grep "browser_download_url.*jar" | cut -d : -f 2,3 | tr -d \" | wget -qi -
+          curl -s https://api.github.com/repos/revanced/revanced-integrations/releases/latest | grep "browser_download_url.*apk" | cut -d : -f 2,3 | tr -d \" | wget -qi -
+          mv revanced-cli*.jar revanced-cli.jar
+          mv revanced-patches*.jar revanced-patches.jar
+          mv revanced-integrations*.apk revanced-integrations.apk
+
+      - name: Download apkeep (APK Fetcher)
+        run: |
+          wget https://github.com/EFForg/apkeep/releases/latest/download/apkeep-x86_64-unknown-linux-gnu -O apkeep
+          chmod +x apkeep
+
+      - name: Download Latest Instagram APK
+        run: |
+          ./apkeep -a com.instagram.android .
+          mv com.instagram.android.apk instagram.apk
+
+      - name: Patch APK with ReVanced
+        run: |
+          java -jar revanced/revanced-cli.jar patch \
+            -p revanced/revanced-patches.jar \
+            -m revanced/revanced-integrations.apk \
+            -i hide-ads \
+            -i hide-explore \
+            -i hide-reels \
+            -i disable-reels-scrolling \
+            -i custom-branding \
+            -o instazen-unsigned.apk \
+            instagram.apk
+
+      - name: Decode Keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > instazen.keystore
+
+      - name: Sign APK
+        run: |
+          apksigner sign --ks instazen.keystore \
+            --ks-key-alias ${{ secrets.KEYALIAS }} \
+            --ks-pass pass:${{ secrets.KEYPASSWORD }} \
+            --out InstaZen-Release.apk \
+            instazen-unsigned.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          name: InstaZen Build ${{ github.run_number }}
+          files: InstaZen-Release.apk
+          draft: false
+          prerelease: false
