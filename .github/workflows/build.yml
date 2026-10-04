@@ -18,27 +18,23 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      - name: Download ReVanced Tooling (Bulletproof)
+      - name: Download ReVanced Tooling
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir revanced
           cd revanced
           
-          # 1. Download official CLI (Universal and never blocked)
+          # 1. Download official CLI
           gh release download -R revanced/revanced-cli -p "*.jar"
           
-          # 2. Download RVX Patches (Tries .jar first, falls back to .rvp without crashing)
+          # 2. Download RVX Patches
           gh release download -R inotia00/revanced-patches -p "*.jar" || gh release download -R inotia00/revanced-patches -p "*.rvp"
           
-          # 3. Download RVX Integrations (Only if they exist, bypasses error if they don't)
-          gh release download -R inotia00/revanced-integrations -p "*.apk" || echo "No integrations found, skipping."
-          
-          # Safely rename everything found
+          # Safely rename everything found (Integrations removed)
           find . -name "*cli*.jar" -exec mv {} revanced-cli.jar \;
           find . -name "*patches*.jar" -exec mv {} revanced-patches.jar \;
           find . -name "*patches*.rvp" -exec mv {} revanced-patches.rvp \;
-          find . -name "*integrations*.apk" -exec mv {} revanced-integrations.apk \;
 
       - name: Download apkeep (APK Fetcher)
         run: |
@@ -52,17 +48,13 @@ jobs:
 
       - name: Patch APK with ReVanced Extended
         run: |
-          # Dynamically detect downloaded files so we never pass a missing file flag
           PATCH_FILE=$(find revanced -name "revanced-patches.*" | head -n 1)
-          INT_FILE=$(find revanced -name "revanced-integrations.apk" | head -n 1)
           
-          ARGS="-p $PATCH_FILE"
-          if [ -n "$INT_FILE" ]; then
-            ARGS="$ARGS -m $INT_FILE"
-          fi
-          
-          # Execute patch command
-          java -jar revanced/revanced-cli.jar patch $ARGS -b -o instazen-unsigned.apk instagram.apk
+          # Execute patch command strictly without the -m flag
+          java -jar revanced/revanced-cli.jar patch \
+            -p $PATCH_FILE -b \
+            -o instazen-unsigned.apk \
+            instagram.apk
 
       - name: Decode Keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > instazen.keystore
