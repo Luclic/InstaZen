@@ -48,9 +48,15 @@ jobs:
       - name: Download Latest Instagram APK
         run: |
           ./apkeep -a com.instagram.android -d apk-pure .
-          # Safely rename the file while keeping its original extension (.apk or .xapk)
           FILE=$(ls com.instagram.android*)
-          mv "$FILE" instagram.${FILE##*.}
+          
+          # If APKPure provided an .xapk bundle, unzip it and isolate the base APK
+          if [[ "$FILE" == *.xapk ]]; then
+            unzip -q "$FILE" -d insta_extract
+            find insta_extract -maxdepth 1 -name "*.apk" -not -name "config.*" -exec mv {} instagram.apk \;
+          else
+            mv "$FILE" instagram.apk
+          fi
 
       - name: Patch APK with ReVanced Extended
         run: |
@@ -62,8 +68,8 @@ jobs:
             ARGS="$ARGS -m $INT_FILE"
           fi
           
-          # Use old CLI syntax: no 'patch' keyword, -a for apk, --experimental for force
-          java -jar revanced/revanced-cli.jar $ARGS --experimental -o instazen-unsigned.apk -a instagram.*
+          # Target the extracted instagram.apk instead of the wildcard
+          java -jar revanced/revanced-cli.jar $ARGS --experimental -o instazen-unsigned.apk -a instagram.apk
             
           # Safety check: fail cleanly if the file was skipped again
           if [ ! -f "instazen-unsigned.apk" ]; then
