@@ -19,18 +19,21 @@ jobs:
           distribution: 'zulu'
 
       - name: Download ReVanced Tooling
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir revanced
           cd revanced
           
-          # Fetch and name latest CLI
-          curl -s https://api.github.com/repos/revanced/revanced-cli/releases/latest | grep "browser_download_url.*jar" | cut -d : -f 2,3 | tr -d \" | wget -qi - -O revanced-cli.jar
+          # Safely download latest assets using the official authenticated GitHub CLI
+          gh release download -R revanced/revanced-cli -p "*.jar"
+          gh release download -R revanced/revanced-patches -p "*.rvp"
+          gh release download -R revanced/revanced-integrations -p "*.apk"
           
-          # Fetch and name latest Patches
-          curl -s https://api.github.com/repos/revanced/revanced-patches/releases/latest | grep "browser_download_url.*rvp" | cut -d : -f 2,3 | tr -d \" | wget -qi - -O revanced-patches.rvp
-          
-          # Fetch and name latest Integrations
-          curl -s https://api.github.com/repos/revanced/revanced-integrations/releases/latest | grep "browser_download_url.*apk" | cut -d : -f 2,3 | tr -d \" | wget -qi - -O revanced-integrations.apk
+          # Rename them to standard names
+          mv revanced-cli*.jar revanced-cli.jar
+          mv *.rvp revanced-patches.rvp
+          mv *.apk revanced-integrations.apk
 
       - name: Download apkeep (APK Fetcher)
         run: |
