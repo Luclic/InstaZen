@@ -55,12 +55,15 @@ jobs:
       - name: Patch APK with ReVanced Extended
         run: |
           PATCH_FILE=$(find revanced -name "revanced-patches.*" | head -n 1)
+          INT_FILE=$(find revanced -name "revanced-integrations.apk" | head -n 1)
           
-          # Add --force to bypass strict version checking
-          java -jar revanced/revanced-cli.jar patch \
-            -p $PATCH_FILE -b --force \
-            -o instazen-unsigned.apk \
-            instagram.*
+          ARGS="-b $PATCH_FILE"
+          if [ -n "$INT_FILE" ]; then
+            ARGS="$ARGS -m $INT_FILE"
+          fi
+          
+          # Use old CLI syntax: no 'patch' keyword, -a for apk, --experimental for force
+          java -jar revanced/revanced-cli.jar $ARGS --experimental -o instazen-unsigned.apk -a instagram.*
             
           # Safety check: fail cleanly if the file was skipped again
           if [ ! -f "instazen-unsigned.apk" ]; then
