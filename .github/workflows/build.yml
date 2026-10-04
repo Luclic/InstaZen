@@ -68,11 +68,16 @@ jobs:
             ARGS="$ARGS -m $INT_FILE"
           fi
           
-          # Target the extracted instagram.apk instead of the wildcard
-          java -jar revanced/revanced-cli.jar $ARGS --experimental -o instazen-unsigned.apk -a instagram.apk
+          # Output to a temporary directory instead of the final file name
+          java -jar revanced/revanced-cli.jar $ARGS --experimental -o patched_temp -a instagram.apk
             
-          # Safety check: fail cleanly if the file was skipped again
-          if [ ! -f "instazen-unsigned.apk" ]; then
+          # Extract the base.apk from the directory and rename it for the signing step
+          if [ -f "patched_temp/base.apk" ]; then
+            mv patched_temp/base.apk instazen-unsigned.apk
+          elif [ -f "patched_temp" ]; then
+            # Fallback just in case it behaves normally and outputs a file
+            mv patched_temp instazen-unsigned.apk
+          else
             echo "Error: Patched APK was not created! The patcher applied zero patches."
             exit 1
           fi
