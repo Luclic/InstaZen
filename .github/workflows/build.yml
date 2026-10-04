@@ -55,15 +55,18 @@ jobs:
       - name: Patch APK with ReVanced Extended
         run: |
           PATCH_FILE=$(find revanced -name "revanced-patches.*" | head -n 1)
-          INT_FILE=$(find revanced -name "revanced-integrations.apk" | head -n 1)
           
-          ARGS="-p $PATCH_FILE"
-          if [ -n "$INT_FILE" ]; then
-            ARGS="$ARGS -m $INT_FILE"
+          # Add --force to bypass strict version checking
+          java -jar revanced/revanced-cli.jar patch \
+            -p $PATCH_FILE -b --force \
+            -o instazen-unsigned.apk \
+            instagram.*
+            
+          # Safety check: fail cleanly if the file was skipped again
+          if [ ! -f "instazen-unsigned.apk" ]; then
+            echo "Error: Patched APK was not created! The patcher applied zero patches."
+            exit 1
           fi
-          
-          # Use a wildcard for instagram.* so bash passes the correct extension (.xapk or .apk)
-          java -jar revanced/revanced-cli.jar patch $ARGS -b -o instazen-unsigned.apk instagram.*
 
       - name: Decode Keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > instazen.keystore
