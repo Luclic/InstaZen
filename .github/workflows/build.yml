@@ -45,7 +45,7 @@ jobs:
       - name: Patch APK with ReVanced
         run: |
           java -jar revanced/revanced-cli.jar patch \
-            -p revanced/revanced-patches.rvp \
+            -p revanced/revanced-patches.rvp -b \
             -o instazen-unsigned.apk \
             instagram.apk
 
