@@ -34,12 +34,12 @@ jobs:
 
       - name: Download apkeep (APK Fetcher)
         run: |
-          wget https://github.com/EFForg/apkeep/releases/latest/download/apkeep-x86_64-unknown-linux-gnu -O apkeep
+          wget https://github.com/EFForg/apkeep/releases/download/0.18.0/apkeep-x86_64-unknown-linux-gnu -O apkeep
           chmod +x apkeep
 
       - name: Download Latest Instagram APK
         run: |
-          ./apkeep -a com.instagram.android -d apk-pure --accept-apk-pure-dangers .
+          ./apkeep -a com.instagram.android -d apk-pure .
           mv com.instagram.android.apk instagram.apk
 
       - name: Patch APK with ReVanced
