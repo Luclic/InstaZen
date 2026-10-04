@@ -39,7 +39,7 @@ jobs:
 
       - name: Download Latest Instagram APK
         run: |
-          ./apkeep -a com.instagram.android -d apkpure .
+          ./apkeep -a com.instagram.android -d apk-pure .
           mv com.instagram.android.apk instagram.apk
 
       - name: Patch APK with ReVanced
