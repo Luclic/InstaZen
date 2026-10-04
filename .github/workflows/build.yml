@@ -18,27 +18,39 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      - name: Download ReVanced Tooling
+      - name: Download ReVanced Tooling (RVX Fork)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir revanced
           cd revanced
           
-          # Safely download latest assets using the official authenticated GitHub CLI
-          gh release download -R revanced/revanced-cli -p "*.jar"
-          gh release download -R revanced/revanced-patches -p "*.rvp"
-          gh release download -R revanced/revanced-integrations -p "*.apk"
+          # Pull from the active ReVanced Extended (inotia00) fork
+          gh release download -R inotia00/revanced-cli -p "*.jar"
+          gh release download -R inotia00/revanced-patches -p "*.jar"
+          gh release download -R inotia00/revanced-integrations -p "*.apk"
           
           # Rename them to standard names
-          mv revanced-cli*.jar revanced-cli.jar
-          mv *.rvp revanced-patches.rvp
-          mv *.apk revanced-integrations.apk
+          mv *cli*.jar revanced-cli.jar
+          mv *patches*.jar revanced-patches.jar
+          mv *integrations*.apk revanced-integrations.apk
 
       - name: Download apkeep (APK Fetcher)
         run: |
           wget https://github.com/EFForg/apkeep/releases/download/0.18.0/apkeep-x86_64-unknown-linux-gnu -O apkeep
           chmod +x apkeep
+
+      - name: Download Latest Instagram APK
+        run: |
+          ./apkeep -a com.instagram.android -d apk-pure .
+          mv com.instagram.android* instagram.apk
+
+      - name: Patch APK with ReVanced Extended
+        run: |
+          java -jar revanced/revanced-cli.jar patch \
+            -p revanced/revanced-patches.jar -b \
+            -o instazen-unsigned.apk \
+            instagram.apk
 
       - name: Download Latest Instagram APK
         run: |
